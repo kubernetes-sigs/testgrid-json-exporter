@@ -1,4 +1,4 @@
-# K8s-Testgrid Json Exporter
+# K8s-Testgrid JSON Exporter
 
 ### Usage
 
