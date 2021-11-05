@@ -1,0 +1,13 @@
+groups:
+- name: alerts
+  rules:
+
+  # Alert for any job that is failing for longer than 1 minutes.
+  - alert: JobFailing
+    expr: alert_status{overall_status="FAILING"} == 1
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Job {{ $labels.job_name }} is failing"
+      description: "Job {{ $labels.job_name }} has been failing for more than 1 minutes."
