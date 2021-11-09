@@ -1,0 +1,5 @@
+apiVersion: v2
+appVersion: 0.1
+name: test-exporter
+description: A Custom Prometheus JSON Exporter for K8s Project Testgrid
+version: 0.1

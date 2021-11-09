@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.exporter.service.annotations }}
+  annotations:
+{{ toYaml .Values.exporter.service.annotations | indent 4 }}
+{{- end }}
+  name: {{ template "testgrid-exporter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "testgrid-exporter.name" . }}
+    chart: {{ template "testgrid-exporter.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  {{- with .Values.exporter.service.clusterIP }}
+  clusterIP: {{ . | quote }}
+  {{- end }}
+{{- if .Values.exporter.service.externalIPs }}
+  externalIPs:
+{{ toYaml .Values.exporter.service.externalIPs | indent 4 }}
+{{- end }}
+{{- if .Values.exporter.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.exporter.service.loadBalancerIP | quote }}
+{{- end }}
+{{- if .Values.exporter.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.exporter.service.loadBalancerSourceRanges | indent 4 }}
+{{- end }}
+  ports:
+    - name: ldap
+      port: {{ .Values.exporter.service.port }}
+      targetPort: 9098
+  selector:
+    app: {{ template "testgrid-exporter.name" . }}
+    release: {{ .Release.Name }}
+  type: {{ .Values.exporter.service.type }}

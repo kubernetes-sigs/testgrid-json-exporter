@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+ name: testgrid-metrics
+ labels:
+   app: testgrid-metrics
+   release: monitoring
+spec:
+ type: ClusterIP
+ ports:
+ - name: metrics
+   port: 8081
+   targetPort: 8081

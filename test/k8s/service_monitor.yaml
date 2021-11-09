@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: ptestgrid-metrics
+    release: monitoring
+  name: testgrid-metrics
+  namespace: monitoring
+spec:
+  endpoints:
+  - interval: 5s
+    port: metrics
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      app: testgrid-metrics
+      release: monitoring  
