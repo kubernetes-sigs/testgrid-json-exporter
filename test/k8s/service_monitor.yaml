@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: testgrid-exporter
+    release: monitoring
+  name: testgrid-exporter
+  namespace: monitoring
+spec:
+  endpoints:
+  - interval: 5s
+    port: metrics
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      app: testgrid-exporter
+      release: monitoring  

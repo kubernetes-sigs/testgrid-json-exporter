@@ -1,0 +1,34 @@
+global:
+  dockerRegistry: quay.io 
+  dockerRegistrySecret: "" 
+
+exporter:
+  fullnameOverride: "testgrid-exporter"
+  #nameOverride: ""
+ 
+  strategy: 
+    type: RollingUpdate
+
+  image:
+    name: encodeflush/testgrid-exporter
+    pullPolicy: IfNotPresent
+
+  existingSecret: ""
+
+  service:
+    annotations: {}
+    port: 9098 
+    loadBalancerIP: ""
+    type: ClusterIP
+
+  resources: 
+    requests:
+      cpu: "125m"
+      memory: "256Mi"
+    limits:
+      cpu: "125m"
+      memory: "256Mi"
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}

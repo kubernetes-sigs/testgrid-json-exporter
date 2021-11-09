@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  {{ template "testgrid-exporter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "testgrid-exporter.name" . }}
+    chart: {{ template "testgrid-exporter.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  {{- if .Values.exporter.strategy }}
+  strategy:
+{{ toYaml .Values.exporter.strategy | indent 4 }}
+{{- end }}
+  selector:
+    matchLabels:
+      app: {{ template "testgrid-exporter.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "testgrid-exporter.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      securityContext:
+        runAsUser: 1001
+        #runAsGroup: 1001
+        fsGroup: 1001
+        runAsNonRoot: true
+      {{- include "testgrid-exporter.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ include "testgrid-exporter.image" . }}
+          imagePullPolicy: {{ .Values.exporter.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - name: metrics
+              containerPort: 9098
+          env:
+            - name: PORT
+              value: {{ .Values.exporter.service.port | quote }}
+          livenessProbe:
+            tcpSocket:
+              port: 9098
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 10
+          readinessProbe:
+            tcpSocket:
+              port: 9098
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 10
+          resources:
+{{ toYaml .Values.exporter.resources | indent 12 }}
+    {{- with .Values.exporter.nodeSelector }}
+      nodeSelector:
+ {{ toYaml . | indent 8 }}
+     {{- end }}
+     {{- with .Values.exporter.affinity }}
+      affinity:
+ {{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.exporter.tolerations }}
+      tolerations:
+ {{ toYaml . | indent 8 }}
+    {{- end }}
