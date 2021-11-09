@@ -28,7 +28,7 @@ spec:
 {{ toYaml .Values.exporter.service.loadBalancerSourceRanges | indent 4 }}
 {{- end }}
   ports:
-    - name: ldap
+    - name: metrics
       port: {{ .Values.exporter.service.port }}
       targetPort: 9098
   selector:
