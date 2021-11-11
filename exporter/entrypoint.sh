@@ -13,5 +13,4 @@
 # limitations under the License.
 #!/bin/sh
 
-#python prom_client.py $PORT 
-python prom_client.py 9098
+python prom_client.py $PORT 
