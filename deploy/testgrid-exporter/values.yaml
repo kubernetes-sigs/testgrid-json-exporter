@@ -32,3 +32,130 @@ exporter:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+
+prometheus:
+  rbac:
+    create: true
+
+  imagePullSecrets:
+  # - name: "image-pull-secret"
+
+  ## Define serviceAccount names for components. Defaults to component's fully qualified name.
+  ##
+  serviceAccounts:
+    alertmanager:
+      create: true
+    nodeExporter:
+      create: true
+    pushgateway:
+      create: true
+    server:
+      create: true
+
+  alertmanager:
+    enabled: true
+    name: alertmanager
+    
+    resources: 
+      limits:
+        cpu: 10m
+        memory: 32Mi
+      requests:
+        cpu: 10m
+        memory: 32Mi
+
+    securityContext:
+      runAsUser: 65534
+      runAsNonRoot: true
+      runAsGroup: 65534
+      fsGroup: 65534
+
+    
+  configmapReload:
+    prometheus:
+      enabled: true
+    alertmanager:
+      enabled: true
+
+  kubeStateMetrics:
+    enabled: true
+
+  nodeExporter:
+    enabled: false
+    hostNetwork: true
+    hostPID: true
+    hostRootfs: true
+
+  server:
+    enabled: true
+    name: server
+
+    global:
+      scrape_interval: 1m
+      scrape_timeout: 10s
+      evaluation_interval: 1m
+   
+    persistentVolume:
+      enabled: true
+      accessModes:
+        - ReadWriteOnce
+      size: 8Gi
+
+    resources: 
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+
+  pushgateway:
+    enabled: true
+
+    resources: 
+      limits:
+        cpu: 10m
+        memory: 32Mi
+      requests:
+        cpu: 10m
+        memory: 32Mi
+
+  alertmanagerFiles:
+    alertmanager.yml:
+      global: {}
+        # slack_api_url: ''
+
+      receivers:
+        - name: default-receiver
+          # slack_configs:
+          #  - channel: '@you'
+          #    send_resolved: true
+
+      route:
+        group_wait: 10s
+        group_interval: 5m
+        receiver: default-receiver
+        repeat_interval: 3h
+
+  serverFiles:
+    alerting_rules.yml: {}
+    # groups:
+    #   - name: Instances
+    #     rules:
+    #       - alert: InstanceDown
+    #         expr: up == 0
+    #         for: 5m
+    #         labels:
+    #           severity: page
+    #         annotations:
+    #           description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 5 minutes.'
+    #           summary: 'Instance {{ $labels.instance }} down'
+    alerts: {}
+    rules: {}
+    prometheus.yml:
+      scrape_configs:
+      - job_name: testgrid-exporter           
+        metrics_path: /metrics
+        static_configs:
+        - targets:
+          - testgrid-exporter:9098
