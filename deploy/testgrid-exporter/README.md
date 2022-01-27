@@ -1,1 +1,0 @@
-# Testgrid Prometheus JSON Exporter

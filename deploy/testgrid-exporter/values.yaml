@@ -10,14 +10,14 @@ exporter:
     type: RollingUpdate
 
   image:
-    name: encodeflush/testgrid-exporter
+    name: leonardpahlke/testgrid-exporter
     pullPolicy: IfNotPresent
 
   existingSecret: ""
 
   service:
     annotations: {}
-    port: 9098 
+    port: 8081 
     loadBalancerIP: ""
     type: ClusterIP
 
@@ -94,7 +94,7 @@ prometheus:
       scrape_interval: 1m
       scrape_timeout: 10s
       evaluation_interval: 1m
-   
+
     persistentVolume:
       enabled: true
       accessModes:
@@ -158,4 +158,4 @@ prometheus:
         metrics_path: /metrics
         static_configs:
         - targets:
-          - testgrid-exporter:9098
+          - testgrid-exporter:8081

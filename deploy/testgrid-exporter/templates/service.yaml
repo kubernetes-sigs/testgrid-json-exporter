@@ -30,7 +30,7 @@ spec:
   ports:
     - name: metrics
       port: {{ .Values.exporter.service.port }}
-      targetPort: 9098
+      targetPort: 8081
   selector:
     app: {{ template "testgrid-exporter.name" . }}
     release: {{ .Release.Name }}

@@ -83,5 +83,6 @@ if __name__ == '__main__':
     start_http_server(int(sys.argv[1]))
     REGISTRY.register(JsonCollector(urls))
 
+    # TODO: check this looks strange -- reminds me of active waiting
     while True:
         time.sleep(1)
