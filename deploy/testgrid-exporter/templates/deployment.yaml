@@ -38,19 +38,19 @@ spec:
             allowPrivilegeEscalation: false
           ports:
             - name: metrics
-              containerPort: 9098
+              containerPort: 8081
           env:
             - name: PORT
               value: {{ .Values.exporter.service.port | quote }}
           livenessProbe:
             tcpSocket:
-              port: 9098
+              port: 8081
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 10
           readinessProbe:
             tcpSocket:
-              port: 9098
+              port: 8081
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 10
