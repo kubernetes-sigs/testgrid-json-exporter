@@ -110,11 +110,25 @@ $ kubectl -n monitoring port-forward svc/testgrid-exporter 8081:8081
 
 You should be able to access the exposed metrics http://127.0.0.1:8081
 
-## Future plans
+## Roadmap
 
-**What's currently missing**:
-* Grafana dashboard + configuration
+- [X] Configure custom testgrid json exporter container
+- [X] Configure prometheus to use testgrid json exporter
+- [X] Create helm charts
+- [x] Donate repository to k-sigs org: https://github.com/kubernetes/org/issues/3218
+- [ ] Grafana dashboard + configuration: https://github.com/kubernetes-sigs/testgrid-json-exporter/issues/2
+- [ ] Publish container images to a community container registry: https://github.com/kubernetes-sigs/testgrid-json-exporter/issues/1
+- [ ] Multistage build for the image `testgrid-exporter`: https://github.com/kubernetes-sigs/testgrid-json-exporter/issues/5
+- [ ] Kubernetes Slack Notifications & Alerts: https://github.com/kubernetes-sigs/testgrid-json-exporter/issues/4
+- [ ] Host project on community owned infrastructure: https://github.com/kubernetes-sigs/testgrid-json-exporter/issues/3
 
-**Improvements**:
-* Multistage build for the image `testgrid-exporter`
-* Kubernetes Slack Notifications & Alerts
+## Community, discussion, contribution, and support
+You can reach the maintainers of this project at:
+
+* [Kubernetes Slack](https://slack.k8s.io/) at `#sig-release` and `#release-ci-signal`
+
+## Sponsoring SIG's
+* [`sig-release`](https://github.com/kubernetes/sig-release)
+
+## Code of conduct
+Participation in the Kubernetes community is governed by the Kubernetes [Code of Conduct](code-of-conduct.md).
