@@ -1,6 +1,6 @@
 # K8s-Testgrid JSON Exporter
 
-This project is work in progress and not yet in use!
+This project is a work in progress and not ready for production usage.
 
 In short the project should show on a one page dashboard the current state of [testgrid](https://testgrid.k8s.io/) that is relevant to cut the release ([master-blocking](https://testgrid.k8s.io/sig-release-master-blocking), [master-informing](https://testgrid.k8s.io/sig-release-master-informing), 1.XX-blocking, 1.XX-informing). In addition to monitoring testgrid from a higher-level perspective, this platform should also be used to send scheduled reports, alerts, and perhaps more in the future.
 
