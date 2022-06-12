@@ -14,7 +14,7 @@
 
 #!/usr/bin/env python3
 ARG username="exporter"
-FROM docker.io/library/python:3.9.7-slim AS build
+FROM docker.io/library/python:3.9.7-alpine AS build
 
 ARG uid=1000
 ARG gid=1000
@@ -23,14 +23,14 @@ ARG username
 COPY exporter /opt/exporter
 WORKDIR /opt/exporter
 
-RUN addgroup --gid $gid $username \
-    && adduser --disabled-password --gecos '' --uid $uid --gid $gid $username \
+RUN addgroup -g $gid $username \
+    && adduser --disabled-password -g '' -u $uid -G $username -D $username \
     && chown -R $username:$username /opt/exporter
 USER $username
 
 RUN pip install --target=/opt/exporter/dependencies prometheus-client==0.14.1 requests==2.28.0
 
-FROM docker.io/library/python:3.9.7-slim AS final
+FROM docker.io/library/python:3.9.7-alpine AS final
 
 ARG username
 ENV PORT=8081
@@ -45,5 +45,4 @@ COPY --from=build	/opt/exporter .
 ENV PYTHONPATH="${PYTHONPATH}:/opt/exporter/dependencies"
 USER $username
 EXPOSE ${PORT}
-
-ENTRYPOINT ["bash", "./entrypoint.sh"]
+ENTRYPOINT ["sh", "./entrypoint.sh"]
