@@ -6,3 +6,7 @@ approvers:
   - justaugustus
   - puerco
   - saschagrunert
+
+reviewers:
+  - leonardpahlke
+  - encodeflush
