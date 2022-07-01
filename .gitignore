@@ -3,3 +3,6 @@ deploy/testgrid-exporter/exporter.yaml
 
 .vscode
 .DS_Store
+
+# Ignore the helm chart template
+deploy/testgrid-exporter/export.yaml
