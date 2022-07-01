@@ -1,0 +1,990 @@
+---
+# Source: testgrid-exporter/charts/prometheus/charts/kube-state-metrics/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-4.0.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: monitoring
+    app.kubernetes.io/version: "2.2.4"
+  name: monitoring-kube-state-metrics
+  namespace: monitoring
+imagePullSecrets:
+  []
+---
+# Source: testgrid-exporter/charts/prometheus/templates/alertmanager/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    component: "alertmanager"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-alertmanager
+  namespace: monitoring
+  annotations:
+    {}
+---
+# Source: testgrid-exporter/charts/prometheus/templates/pushgateway/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    component: "pushgateway"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-pushgateway
+  namespace: monitoring
+  annotations:
+    {}
+---
+# Source: testgrid-exporter/charts/prometheus/templates/server/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    component: "server"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-server
+  namespace: monitoring
+  annotations:
+    {}
+---
+# Source: testgrid-exporter/charts/prometheus/templates/alertmanager/cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    component: "alertmanager"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-alertmanager
+  namespace: monitoring
+data:
+  alertmanager.yml: |
+    global: {}
+    receivers:
+    - name: default-receiver
+    route:
+      group_interval: 5m
+      group_wait: 10s
+      receiver: default-receiver
+      repeat_interval: 3h
+---
+# Source: testgrid-exporter/charts/prometheus/templates/server/cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    component: "server"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-server
+  namespace: monitoring
+data:
+  alerting_rules.yml: |
+    {}
+  alerts: |
+    {}
+  prometheus.yml: |
+    global:
+      evaluation_interval: 1m
+      scrape_interval: 1m
+      scrape_timeout: 10s
+    rule_files:
+    - /etc/config/recording_rules.yml
+    - /etc/config/alerting_rules.yml
+    - /etc/config/rules
+    - /etc/config/alerts
+    scrape_configs:
+    - job_name: testgrid-exporter
+      metrics_path: /metrics
+      static_configs:
+      - targets:
+        - testgrid-exporter:8081
+    alerting:
+      alertmanagers:
+      - kubernetes_sd_configs:
+          - role: pod
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace]
+          regex: monitoring
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          regex: prometheus
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_label_component]
+          regex: alertmanager
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_probe]
+          regex: .*
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_container_port_number]
+          regex: "9093"
+          action: keep
+  recording_rules.yml: |
+    {}
+  rules: |
+    {}
+---
+# Source: testgrid-exporter/charts/prometheus/templates/alertmanager/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    component: "alertmanager"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-alertmanager
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "2Gi"
+---
+# Source: testgrid-exporter/charts/prometheus/templates/server/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    component: "server"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-server
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "8Gi"
+---
+# Source: testgrid-exporter/charts/prometheus/charts/kube-state-metrics/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: monitoring
+    app.kubernetes.io/component: metrics 
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/version: "4.0.2"
+    app.kubernetes.io/part-of: kube-state-metrics 
+    helm.sh/chart: kube-state-metrics-4.0.2 
+  name: monitoring-kube-state-metrics
+rules:
+
+- apiGroups: ["certificates.k8s.io"]
+  resources:
+  - certificatesigningrequests
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["list", "watch"]
+
+- apiGroups: ["batch"]
+  resources:
+  - cronjobs
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - daemonsets
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - deployments
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - endpoints
+  verbs: ["list", "watch"]
+
+- apiGroups: ["autoscaling"]
+  resources:
+  - horizontalpodautoscalers
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "networking.k8s.io"]
+  resources:
+  - ingresses
+  verbs: ["list", "watch"]
+
+- apiGroups: ["batch"]
+  resources:
+  - jobs
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - limitranges
+  verbs: ["list", "watch"]
+
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources:
+    - mutatingwebhookconfigurations
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - namespaces
+  verbs: ["list", "watch"]
+
+- apiGroups: ["networking.k8s.io"]
+  resources:
+  - networkpolicies
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - nodes
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - persistentvolumeclaims
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - persistentvolumes
+  verbs: ["list", "watch"]
+
+- apiGroups: ["policy"]
+  resources:
+    - poddisruptionbudgets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - pods
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - replicasets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - replicationcontrollers
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - resourcequotas
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - secrets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - services
+  verbs: ["list", "watch"]
+
+- apiGroups: ["apps"]
+  resources:
+  - statefulsets
+  verbs: ["list", "watch"]
+
+- apiGroups: ["storage.k8s.io"]
+  resources:
+    - storageclasses
+  verbs: ["list", "watch"]
+
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources:
+    - validatingwebhookconfigurations
+  verbs: ["list", "watch"]
+
+- apiGroups: ["storage.k8s.io"]
+  resources:
+    - volumeattachments
+  verbs: ["list", "watch"]
+---
+# Source: testgrid-exporter/charts/prometheus/templates/alertmanager/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    component: "alertmanager"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-alertmanager
+rules:
+  []
+---
+# Source: testgrid-exporter/charts/prometheus/templates/pushgateway/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    component: "pushgateway"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-pushgateway
+rules:
+  []
+---
+# Source: testgrid-exporter/charts/prometheus/templates/server/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    component: "server"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-server
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - services
+      - endpoints
+      - pods
+      - ingresses
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "extensions"
+      - "networking.k8s.io"
+    resources:
+      - ingresses/status
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - "/metrics"
+    verbs:
+      - get
+---
+# Source: testgrid-exporter/charts/prometheus/charts/kube-state-metrics/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-4.0.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: monitoring
+    app.kubernetes.io/version: "2.2.4"
+  name: monitoring-kube-state-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: monitoring-kube-state-metrics
+subjects:
+- kind: ServiceAccount
+  name: monitoring-kube-state-metrics
+  namespace: monitoring
+---
+# Source: testgrid-exporter/charts/prometheus/templates/alertmanager/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    component: "alertmanager"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-alertmanager
+subjects:
+  - kind: ServiceAccount
+    name: monitoring-prometheus-alertmanager
+    namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: monitoring-prometheus-alertmanager
+---
+# Source: testgrid-exporter/charts/prometheus/templates/pushgateway/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    component: "pushgateway"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-pushgateway
+subjects:
+  - kind: ServiceAccount
+    name: monitoring-prometheus-pushgateway
+    namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: monitoring-prometheus-pushgateway
+---
+# Source: testgrid-exporter/charts/prometheus/templates/server/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    component: "server"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-server
+subjects:
+  - kind: ServiceAccount
+    name: monitoring-prometheus-server
+    namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: monitoring-prometheus-server
+---
+# Source: testgrid-exporter/charts/prometheus/charts/kube-state-metrics/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: monitoring-kube-state-metrics
+  namespace: monitoring
+  labels:    
+    helm.sh/chart: kube-state-metrics-4.0.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: monitoring
+    app.kubernetes.io/version: "2.2.4"
+  annotations:
+    prometheus.io/scrape: 'true'
+spec:
+  type: "ClusterIP"
+  ports:
+  - name: "http"
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+  
+  selector:    
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: monitoring
+---
+# Source: testgrid-exporter/charts/prometheus/templates/alertmanager/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    component: "alertmanager"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-alertmanager
+  namespace: monitoring
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 9093
+  selector:
+    component: "alertmanager"
+    app: prometheus
+    release: monitoring
+  sessionAffinity: None
+  type: "ClusterIP"
+---
+# Source: testgrid-exporter/charts/prometheus/templates/pushgateway/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/probe: pushgateway
+  labels:
+    component: "pushgateway"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-pushgateway
+  namespace: monitoring
+spec:
+  ports:
+    - name: http
+      port: 9091
+      protocol: TCP
+      targetPort: 9091
+  selector:
+    component: "pushgateway"
+    app: prometheus
+    release: monitoring
+  type: "ClusterIP"
+---
+# Source: testgrid-exporter/charts/prometheus/templates/server/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    component: "server"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-server
+  namespace: monitoring
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 9090
+  selector:
+    component: "server"
+    app: prometheus
+    release: monitoring
+  sessionAffinity: None
+  type: "ClusterIP"
+---
+# Source: testgrid-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: testgrid-exporter
+  namespace: monitoring
+  labels:
+    app: testgrid-exporter
+    chart: testgrid-exporter-0.1
+    release: monitoring
+    heritage: Helm
+spec:
+  ports:
+    - name: metrics
+      port: 8081
+      targetPort: 8081
+  selector:
+    app: testgrid-exporter
+    release: monitoring
+  type: ClusterIP
+---
+# Source: testgrid-exporter/charts/prometheus/charts/kube-state-metrics/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-kube-state-metrics
+  namespace: monitoring
+  labels:    
+    helm.sh/chart: kube-state-metrics-4.0.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: monitoring
+    app.kubernetes.io/version: "2.2.4"
+spec:
+  selector:
+    matchLabels:      
+      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/instance: monitoring
+  replicas: 1
+  template:
+    metadata:
+      labels:        
+        helm.sh/chart: kube-state-metrics-4.0.2
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: kube-state-metrics
+        app.kubernetes.io/name: kube-state-metrics
+        app.kubernetes.io/instance: monitoring
+        app.kubernetes.io/version: "2.2.4"
+    spec:
+      hostNetwork: false
+      serviceAccountName: monitoring-kube-state-metrics
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsUser: 65534
+      containers:
+      - name: kube-state-metrics
+        args:
+        - --port=8080
+        - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
+        - --telemetry-port=8081
+        imagePullPolicy: IfNotPresent
+        image: "k8s.gcr.io/kube-state-metrics/kube-state-metrics:v2.2.4"
+        ports:
+        - containerPort: 8080
+          name: "http"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+---
+# Source: testgrid-exporter/charts/prometheus/templates/alertmanager/deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    component: "alertmanager"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-alertmanager
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      component: "alertmanager"
+      app: prometheus
+      release: monitoring
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        component: "alertmanager"
+        app: prometheus
+        release: monitoring
+        chart: prometheus-15.0.1
+        heritage: Helm
+    spec:
+      serviceAccountName: monitoring-prometheus-alertmanager
+      containers:
+        - name: prometheus-alertmanager
+          image: "quay.io/prometheus/alertmanager:v0.23.0"
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          args:
+            - --config.file=/etc/config/alertmanager.yml
+            - --storage.path=/data
+            - --cluster.listen-address=
+            - --web.external-url=http://localhost:9093
+
+          ports:
+            - containerPort: 9093
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9093
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+          resources:
+            limits:
+              cpu: 10m
+              memory: 32Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+            - name: storage-volume
+              mountPath: "/data"
+              subPath: ""
+        - name: prometheus-alertmanager-configmap-reload
+          image: "jimmidyson/configmap-reload:v0.5.0"
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --volume-dir=/etc/config
+            - --webhook-url=http://127.0.0.1:9093/-/reload
+          resources:
+            {}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+              readOnly: true
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      volumes:
+        - name: config-volume
+          configMap:
+            name: monitoring-prometheus-alertmanager
+        - name: storage-volume
+          persistentVolumeClaim:
+            claimName: monitoring-prometheus-alertmanager
+---
+# Source: testgrid-exporter/charts/prometheus/templates/pushgateway/deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    component: "pushgateway"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-pushgateway
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      component: "pushgateway"
+      app: prometheus
+      release: monitoring
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        component: "pushgateway"
+        app: prometheus
+        release: monitoring
+        chart: prometheus-15.0.1
+        heritage: Helm
+    spec:
+      serviceAccountName: monitoring-prometheus-pushgateway
+      containers:
+        - name: prometheus-pushgateway
+          image: "prom/pushgateway:v1.4.2"
+          imagePullPolicy: "IfNotPresent"
+          args:
+          ports:
+            - containerPort: 9091
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9091
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9091
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          resources:
+            limits:
+              cpu: 10m
+              memory: 32Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+---
+# Source: testgrid-exporter/charts/prometheus/templates/server/deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    component: "server"
+    app: prometheus
+    release: monitoring
+    chart: prometheus-15.0.1
+    heritage: Helm
+  name: monitoring-prometheus-server
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      component: "server"
+      app: prometheus
+      release: monitoring
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        component: "server"
+        app: prometheus
+        release: monitoring
+        chart: prometheus-15.0.1
+        heritage: Helm
+    spec:
+      enableServiceLinks: true
+      serviceAccountName: monitoring-prometheus-server
+      containers:
+        - name: prometheus-server-configmap-reload
+          image: "jimmidyson/configmap-reload:v0.5.0"
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --volume-dir=/etc/config
+            - --webhook-url=http://127.0.0.1:9090/-/reload
+          resources:
+            {}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+              readOnly: true
+
+        - name: prometheus-server
+          image: "quay.io/prometheus/prometheus:v2.31.1"
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --storage.tsdb.retention.time=15d
+            - --config.file=/etc/config/prometheus.yml
+            - --storage.tsdb.path=/data
+            - --web.console.libraries=/etc/prometheus/console_libraries
+            - --web.console.templates=/etc/prometheus/consoles
+            - --web.enable-lifecycle
+          ports:
+            - containerPort: 9090
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 4
+            failureThreshold: 3
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+            - name: storage-volume
+              mountPath: /data
+              subPath: ""
+      hostNetwork: false
+      dnsPolicy: ClusterFirst
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      terminationGracePeriodSeconds: 300
+      volumes:
+        - name: config-volume
+          configMap:
+            name: monitoring-prometheus-server
+        - name: storage-volume
+          persistentVolumeClaim:
+            claimName: monitoring-prometheus-server
+---
+# Source: testgrid-exporter/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  testgrid-exporter
+  namespace: monitoring
+  labels:
+    app: testgrid-exporter
+    chart: testgrid-exporter-0.1
+    release: monitoring
+    heritage: Helm
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: testgrid-exporter
+      release: monitoring
+  template:
+    metadata:
+      labels:
+        app: testgrid-exporter
+        release: monitoring
+    spec:
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        runAsNonRoot: true
+      
+      containers:
+        - name: testgrid-exporter
+          image: quay.io/leonardpahlke/testgrid-exporter:0.1
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - name: metrics
+              containerPort: 8081
+          env:
+            - name: PORT
+              value: "8081"
+          livenessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 10
+          readinessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 10
+          resources:
+            limits:
+              cpu: 125m
+              memory: 256Mi
+            requests:
+              cpu: 125m
+              memory: 256Mi

@@ -1,2 +1,5 @@
 # Helm chart export
 deploy/testgrid-exporter/exporter.yaml
+
+.vscode
+.DS_Store
