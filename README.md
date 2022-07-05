@@ -122,7 +122,7 @@ You should be able to access the exposed metrics http://127.0.0.1:8081
 - [x] Donate repository to k-sigs org: https://github.com/kubernetes/org/issues/3218
 - [ ] Grafana dashboard + configuration: https://github.com/kubernetes-sigs/testgrid-json-exporter/issues/2
 - [ ] Publish container images to a community container registry: https://github.com/kubernetes-sigs/testgrid-json-exporter/issues/1
-- [ ] Multistage build for the image `testgrid-exporter`: https://github.com/kubernetes-sigs/testgrid-json-exporter/issues/5
+- [X] Multistage build for the image `testgrid-exporter`: https://github.com/kubernetes-sigs/testgrid-json-exporter/issues/5
 - [ ] Kubernetes Slack Notifications & Alerts: https://github.com/kubernetes-sigs/testgrid-json-exporter/issues/4
 - [ ] Host project on community owned infrastructure: https://github.com/kubernetes-sigs/testgrid-json-exporter/issues/3
 

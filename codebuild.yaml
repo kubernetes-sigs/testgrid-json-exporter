@@ -1,0 +1,23 @@
+---
+# See https://cloud.google.com/cloud-build/docs/build-config
+timeout: 1200s
+options:
+  substitution_option: ALLOW_LOOSE
+  machineType: N1_HIGHCPU_8
+steps:
+  - name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20220617-174ad91c3a
+    entrypoint: bash
+    env:
+      - TAG=$_GIT_TAG
+    args:
+    - -c
+    - |
+      gcloud auth configure-docker && \
+      make image
+substitutions:
+  # _GIT_TAG will be filled with a git-based tag for the image, of the form
+  # vYYYYMMDD-hash, and can be used as a substitution
+  _GIT_TAG: '12345'
+images:
+  - 'gcr.io/$PROJECT_ID/testgrid-json-exporter-amd64:$_GIT_TAG'
+  - 'gcr.io/$PROJECT_ID/testgrid-json-exporter-amd64:latest'
