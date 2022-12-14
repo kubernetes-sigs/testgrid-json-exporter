@@ -1,12 +1,10 @@
 # See the OWNERS docs at https://go.k8s.io/owners
 
 approvers:
-  - cpanato
-  - jeremyrickard
-  - justaugustus
-  - puerco
-  - saschagrunert
+  - sig-release-leads
+  - release-engineering-approvers
 
 reviewers:
+  - hosseinsalahi
   - leonardpahlke
-  - encodeflush
+  - release-engineering-reviewers
